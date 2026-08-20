@@ -49,17 +49,22 @@ Notes:
 - To change which inbox gets the messages, or to see submission history, log
   into your Formspree dashboard at formspree.io.
 
-## Deploying to Ionos
+## Deployment
 
-Ionos website hosting typically works over FTP/SFTP or a file manager in
-your Ionos control panel:
+Live at **themagnetfairy.com**, hosted on Bluehost (Starter plan, 3-year
+term, purchased Aug 2026). Files are deployed via cPanel File Manager, not
+git — there's no CI/CD hookup, so a code change here doesn't go live until
+it's re-uploaded.
 
-1. Log into your Ionos hosting control panel.
-2. Find the file manager or FTP credentials for your hosting package.
-3. Upload the contents of this folder (`index.html`, `css/`, `js/`,
-   `images/`) to your site's web root (often `htdocs` or similar — check
-   your Ionos hosting docs, as it varies by plan).
-4. Visit your domain to confirm it's live.
+To redeploy after making changes:
+1. Zip `index.html`, `css/`, `js/`, and `images/` together.
+2. Bluehost Account Manager → **Websites** → **Manage Site** → **Files &
+   Access** → **File Manager** (`Manage`).
+3. In `public_html`, delete the old files, upload the new zip, and
+   **Extract** it into `public_html`.
+4. Delete the zip afterward and visit the domain to confirm.
+
+Bluehost account/support: my.bluehost.com (account ID 154350322).
 
 ## Design source
 
