@@ -1,27 +1,43 @@
 // The Magnet Fairy — contact form behavior
 //
-// NOTE: This is a placeholder site with no backend. The form below only
-// simulates a successful submission in the browser — it does not actually
-// send an email or store the message anywhere. Before relying on this form
-// to capture real leads, wire it up to a form backend such as Formspree
-// (https://formspree.io) or Netlify Forms, or point it at a serverless
-// function that sends you an email. See README.md for notes.
+// Submits to Formspree (https://formspree.io) via fetch, so the page never
+// reloads. On success, shows a confirmation message. On failure (network
+// error, Formspree rejects it, etc.), shows an error message and re-enables
+// the form so the visitor can try again.
 
 document.addEventListener("DOMContentLoaded", function () {
   var form = document.getElementById("contact-form");
   var submitBtn = document.getElementById("submit-btn");
   var successMsg = document.getElementById("form-success");
+  var errorMsg = document.getElementById("form-error");
 
   if (!form) return;
 
   form.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    // TODO: replace this simulated success with a real submission,
-    // e.g. fetch('https://formspree.io/f/your-id', { method: 'POST', body: new FormData(form) })
-
-    submitBtn.textContent = "Sent!";
+    errorMsg.hidden = true;
     submitBtn.disabled = true;
-    successMsg.hidden = false;
+    submitBtn.textContent = "Sending...";
+
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { Accept: "application/json" },
+    })
+      .then(function (response) {
+        if (response.ok) {
+          submitBtn.textContent = "Sent!";
+          successMsg.hidden = false;
+          form.reset();
+        } else {
+          throw new Error("Form submission failed");
+        }
+      })
+      .catch(function () {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send message";
+        errorMsg.hidden = false;
+      });
   });
 });

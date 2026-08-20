@@ -363,6 +363,12 @@ textarea.input {
   margin: 0;
 }
 
+.form-error {
+  margin: 0;
+  color: var(--color-accent-2);
+  font-size: 14px;
+}
+
 /* ---------------------------------------------
    Footer
 --------------------------------------------- */

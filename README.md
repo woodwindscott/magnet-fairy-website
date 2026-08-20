@@ -9,7 +9,7 @@ dependencies. Built to hold the storefront until a proper shop is ready.
 ```
 index.html        Page content/structure
 css/styles.css     All styling (colors, type, layout, responsive rules)
-js/main.js         Contact form behavior (client-side only, see below)
+js/main.js         Contact form behavior (submits to Formspree, see below)
 images/            Drop real photos in here (see "Adding photos" below)
 ```
 
@@ -26,35 +26,28 @@ Then visit `http://localhost:8000`.
 
 ## Adding photos
 
-The hero section currently shows a placeholder box (portrait, 3:4) where a
-photo of finished magnets should go — e.g. magnets on a fridge.
-
-To swap it in:
-1. Add your image to `images/` (e.g. `images/hero.jpg`).
-2. In `index.html`, replace the `<figure class="hero-image">...</figure>`
-   block with:
-   ```html
-   <figure class="hero-image">
-     <img src="images/hero.jpg" alt="Custom photo magnets on a fridge" style="width:100%;height:100%;object-fit:cover">
-   </figure>
-   ```
+The hero section shows a real photo (`images/hero.jpg`, portrait 3:4). To
+swap it for a different one later:
+1. Add the new image to `images/` (e.g. `images/hero.jpg`, replacing the
+   existing file, or a new filename of your choice).
+2. If you used a new filename, update the `src` on the `<img>` inside
+   `<figure class="hero-image">` in `index.html` to match.
 
 ## The contact form
 
-The form on the page (`#contact-form`) currently only **simulates** success
-in the browser — when submitted it shows "Thanks! I'll be in touch soon."
-but does **not** actually send you an email or store the message anywhere.
-That's fine for a placeholder, but before you rely on it for real leads,
-wire it up to a real backend. Two easy no-code options that work fine on
-static hosting like Ionos:
+The form (`#contact-form`) submits to
+**[Formspree](https://formspree.io)** (`https://formspree.io/f/xnpallke`) —
+submissions get emailed to whatever address is configured on that Formspree
+form. `js/main.js` submits it via `fetch` so the page never reloads: on
+success it shows "Thanks! I'll be in touch soon.", on failure it shows an
+error message and lets the visitor try again.
 
-- **[Formspree](https://formspree.io)** — free tier, just point the form's
-  `action` at the endpoint they give you and add `method="POST"`.
-- **[Netlify Forms](https://docs.netlify.com/forms/setup/)** — only works if
-  you host on Netlify instead of Ionos, so skip this one for your setup.
-
-Either way, update `js/main.js` to let the real submission happen instead of
-(or in addition to) the simulated success message.
+Notes:
+- The free Formspree tier caps at 50 submissions/month. If you outgrow it,
+  upgrade the plan or switch endpoints — no code changes needed beyond the
+  `action` URL in `index.html`.
+- To change which inbox gets the messages, or to see submission history, log
+  into your Formspree dashboard at formspree.io.
 
 ## Deploying to Ionos
 

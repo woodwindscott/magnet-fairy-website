@@ -96,7 +96,7 @@
       <h2 class="section-title">Let's make something for your fridge</h2>
       <p class="lead">Tell me a bit about what you have in mind — photos, quantity, occasion — and I'll get back to you with pricing and next steps.</p>
     </div>
-    <form class="card contact-form" id="contact-form">
+    <form class="card contact-form" id="contact-form" action="https://formspree.io/f/xnpallke" method="POST">
       <div class="field">
         <label for="name">Name</label>
         <input class="input" id="name" name="name" type="text" placeholder="Your name" required>
@@ -111,6 +111,7 @@
       </div>
       <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Send message</button>
       <p class="text-muted form-success" id="form-success" hidden>Thanks! I'll be in touch soon.</p>
+      <p class="form-error" id="form-error" hidden>Something went wrong sending that — mind trying again, or emailing me directly?</p>
     </form>
   </div>
 </section>
