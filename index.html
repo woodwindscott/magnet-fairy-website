@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Magnet Fairy — Custom Photo Magnets</title>
+<meta name="description" content="Custom photo magnets for your fridge, your storefront, or your next big event — designed and pressed by hand, just for you.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="container">
+  <header class="nav">
+    <span class="nav-brand">The Magnet Fairy</span>
+    <nav class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+</div>
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <h1>The Magnet Fairy</h1>
+      <p class="tagline">Turn magical memories into magnets</p>
+      <p class="lead">Custom photo magnets for your fridge, your storefront, or your next big event — designed and pressed by hand, just for you.</p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn btn-primary">Get a quote</a>
+        <a href="#how-it-works" class="btn btn-secondary">See how it works</a>
+      </div>
+    </div>
+    <figure class="hero-image">
+      <img src="images/hero.jpg" alt="Custom photo magnets on a fridge" class="hero-image-photo">
+    </figure>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h6 class="eyebrow">What we make</h6>
+    <h2 class="section-title">Three ways to put your memories on a magnet</h2>
+    <div class="cards">
+      <div class="card">
+        <span class="tag tag-accent">For you</span>
+        <h3 class="card-title">Custom photo magnets</h3>
+        <p class="card-body">Send your favorite photos — family, pets, vacations — and get them back as keepsake magnets for the fridge, locker or car.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-accent-2">For business</span>
+        <h3 class="card-title">Business &amp; marketing magnets</h3>
+        <p class="card-body">Branded magnets for storefronts, trade shows and mailers — a small, sturdy way to keep your name on the fridge.</p>
+      </div>
+      <div class="card">
+        <span class="tag tag-neutral">For events</span>
+        <h3 class="card-title">Weddings &amp; corporate events</h3>
+        <p class="card-body">Favor magnets and photo-booth keepsakes for weddings, parties and corporate gatherings, personalized for the occasion.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how-it-works">
+  <div class="container">
+    <h6 class="eyebrow">Process</h6>
+    <h2 class="section-title">How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Tell me your idea</h4>
+        <p class="text-muted">Reach out through the form below with your information, design ideas and how many magnets you need.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>Send me the photos</h4>
+        <p class="text-muted">Once we connect online, email me your photos for printing.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Pressed &amp; shipped</h4>
+        <p class="text-muted">Once approved, your magnets are printed, cut and shipped straight to your door.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contact">
+  <div class="container contact-grid">
+    <div class="contact-copy">
+      <h6 class="eyebrow">Get in touch</h6>
+      <h2 class="section-title">Let's make something for your fridge</h2>
+      <p class="lead">Tell me a bit about what you have in mind — photos, quantity, occasion — and I'll get back to you with pricing and next steps.</p>
+    </div>
+    <form class="card contact-form" id="contact-form" action="https://formspree.io/f/xnpallke" method="POST">
+      <div class="field">
+        <label for="name">Name</label>
+        <input class="input" id="name" name="name" type="text" placeholder="Your name" required>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input class="input" id="email" name="email" type="email" placeholder="you@email.com" required>
+      </div>
+      <div class="field">
+        <label for="message">What are you looking for?</label>
+        <textarea class="input" id="message" name="message" placeholder="Photos, quantity, occasion, deadline..." required></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Send message</button>
+      <p class="text-muted form-success" id="form-success" hidden>Thanks! I'll be in touch soon.</p>
+      <p class="form-error" id="form-error" hidden>Something went wrong sending that — mind trying again, or emailing me directly?</p>
+    </form>
+  </div>
+</section>
+
+<footer class="container footer">
+  &copy; 2026 The Magnet Fairy
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
