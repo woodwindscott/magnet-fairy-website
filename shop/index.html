@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — The Magnet Fairy</title>
+<meta name="description" content="Order custom photo magnets online. Upload your photos, crop them, and we press and ship them to you.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="../css/styles.css">
+<link rel="stylesheet" href="../css/vendor/cropper.min.css">
+<link rel="stylesheet" href="../css/shop.css">
+</head>
+<body>
+
+<div class="container">
+  <header class="nav">
+    <a class="nav-brand nav-home" href="../">The Magnet Fairy</a>
+    <nav class="nav-links">
+      <a href="../#how-it-works">How it works</a>
+      <a href="../#contact">Contact</a>
+      <a href="#cart" class="cart-link" id="cart-link">Cart <span class="cart-count" id="cart-count" hidden>0</span></a>
+    </nav>
+  </header>
+</div>
+
+<div class="demo-banner" id="demo-banner" hidden>
+  Test preview. Photos are not uploaded and no payment is taken.
+</div>
+
+<main>
+  <section class="section shop-intro">
+    <div class="container">
+      <h6 class="eyebrow">Shop</h6>
+      <h1 class="section-title shop-title">Order photo magnets</h1>
+      <p class="lead">Pick a size and a pack. Add one photo for each magnet and crop it right here. I press every magnet by hand in Cary, NC, and ship it to your door.</p>
+    </div>
+  </section>
+
+  <section class="section shop-products-section">
+    <div class="container">
+      <div class="products" id="products">
+        <p class="text-muted">Loading magnets…</p>
+      </div>
+      <p class="text-muted shop-note">Mix and match photos within a pack. Shipping is a flat <span data-shipping>$7</span> per order. NC sales tax is added at checkout for NC addresses.</p>
+    </div>
+  </section>
+
+  <section class="section cart-section" id="cart">
+    <div class="container">
+      <h6 class="eyebrow">Your order</h6>
+      <h2 class="section-title">Cart</h2>
+      <div class="cart card" id="cart-box">
+        <div id="cart-items"></div>
+        <div class="cart-empty text-muted" id="cart-empty">Your cart is empty. Pick a pack above to get started.</div>
+        <div class="cart-summary" id="cart-summary" hidden>
+          <div class="cart-row"><span>Magnets</span><span id="cart-subtotal">$0.00</span></div>
+          <div class="cart-row"><span>Shipping</span><span id="cart-shipping">$7.00</span></div>
+          <div class="cart-row text-muted cart-tax-note"><span>NC sales tax</span><span>at checkout</span></div>
+          <div class="cart-row cart-total"><span>Total before tax</span><span id="cart-total">$0.00</span></div>
+          <button class="btn btn-primary btn-block" type="button" id="checkout-btn">Check out securely</button>
+          <p class="form-error" id="checkout-error" hidden></p>
+          <p class="text-muted cart-secure">Payment is handled by Stripe. I never see your card number.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="container footer">
+  &copy; 2026 The Magnet Fairy · Cary, NC · <a href="mailto:scott@themagnetfairy.com">scott@themagnetfairy.com</a>
+</footer>
+
+<!-- Pack builder: one photo slot per magnet -->
+<div class="sheet" id="builder" hidden role="dialog" aria-modal="true" aria-labelledby="builder-title">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <div>
+        <h2 class="sheet-title" id="builder-title">Add your photos</h2>
+        <p class="text-muted sheet-sub" id="builder-sub"></p>
+      </div>
+      <button class="icon-btn" type="button" id="builder-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="slots" id="slots"></div>
+    <p class="text-muted builder-hint">Tap a square to choose a photo. Full-size photos give the sharpest magnets.</p>
+    <div class="sheet-foot">
+      <span class="builder-price" id="builder-price"></span>
+      <button class="btn btn-primary" type="button" id="builder-add" disabled>Add to cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- Crop editor -->
+<div class="sheet sheet-crop" id="cropper" hidden role="dialog" aria-modal="true" aria-labelledby="crop-title">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <div>
+        <h2 class="sheet-title" id="crop-title">Crop your photo</h2>
+        <p class="text-muted sheet-sub">Drag the box to frame your photo. Everything inside the dashed line shows on the front. The outer band wraps around the edge.</p>
+      </div>
+      <button class="icon-btn" type="button" id="crop-cancel" aria-label="Cancel">&times;</button>
+    </div>
+    <div class="crop-stage"><img id="crop-img" alt="Photo to crop"></div>
+    <p class="crop-warning" id="crop-warning" hidden>This photo is small for this size, so the magnet may look a little soft. A larger original will print sharper.</p>
+    <div class="crop-tools">
+      <div class="orient" id="orient" role="group" aria-label="Orientation">
+        <button type="button" class="chip" data-orient="portrait">Tall</button>
+        <button type="button" class="chip" data-orient="landscape">Wide</button>
+      </div>
+      <button type="button" class="chip" id="crop-rotate">Rotate</button>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-secondary" type="button" id="crop-replace">Choose a different photo</button>
+      <button class="btn btn-primary" type="button" id="crop-done">Use this crop</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/jpeg,image/png" hidden>
+
+<script src="../js/vendor/cropper.min.js"></script>
+<script src="../js/shop.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Shop API. Only the three endpoints are reachable; helper files are not.
+Options -Indexes
+
+<FilesMatch "^_">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store"
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>

@@ -1,0 +1,27 @@
+{
+  "_note": "Prices are in cents. The server (api/create-checkout.php) reads THIS file, so prices can't be changed from the browser. paper_mm = the printed paper cut size (face + the part that wraps around the edge). PLACEHOLDER values: confirm prices and paper sizes with Scott before launch.",
+  "currency": "usd",
+  "shipping_cents": 700,
+  "shipping_label": "Shipping (flat rate, USPS)",
+  "print_dpi": 300,
+  "sizes": {
+    "rectangle": {
+      "name": "Rectangle photo magnet",
+      "short": "Rectangle",
+      "dimensions": "2.5\" x 3.5\"",
+      "face_mm": [65, 90],
+      "paper_mm": [77, 102],
+      "orientations": ["portrait", "landscape"],
+      "packs": { "1": 600, "3": 1500, "6": 2500 }
+    },
+    "square": {
+      "name": "Square photo magnet",
+      "short": "Square",
+      "dimensions": "2.5\" x 2.5\"",
+      "face_mm": [63.5, 63.5],
+      "paper_mm": [75.5, 75.5],
+      "orientations": ["square"],
+      "packs": { "1": 500, "3": 1200, "6": 2000 }
+    }
+  }
+}
