@@ -222,6 +222,23 @@ function mf_stripe_verify(string $payload, string $sigHeader, string $secret, in
 
 // ---------------------------------------------------------------- Dropbox
 
+// Saved by api/dropbox-connect.php; a value in the config file also works.
+function mf_dropbox_refresh_token(): string
+{
+    $cfg = mf_config();
+    $file = $cfg['private_dir'] . '/dropbox-refresh.json';
+    if (is_file($file)) {
+        $t = json_decode((string) file_get_contents($file), true);
+        if (!empty($t['refresh_token'])) {
+            return $t['refresh_token'];
+        }
+    }
+    if (!empty($cfg['dropbox_refresh_token'])) {
+        return $cfg['dropbox_refresh_token'];
+    }
+    throw new RuntimeException('Dropbox is not connected yet (run api/dropbox-connect.php).');
+}
+
 function mf_dropbox_token(): string
 {
     $cfg = mf_config();
@@ -236,7 +253,7 @@ function mf_dropbox_token(): string
         'Content-Type: application/x-www-form-urlencoded',
     ], http_build_query([
         'grant_type' => 'refresh_token',
-        'refresh_token' => $cfg['dropbox_refresh_token'],
+        'refresh_token' => mf_dropbox_refresh_token(),
         'client_id' => $cfg['dropbox_app_key'],
         'client_secret' => $cfg['dropbox_app_secret'],
     ]));

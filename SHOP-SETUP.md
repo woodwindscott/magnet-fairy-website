@@ -13,6 +13,7 @@ js/vendor, css/vendor  Cropper.js 1.6.2 (MIT)
 api/get-upload-link.php   Gives the browser a one-time Dropbox upload link
 api/create-checkout.php   Checks prices on the server, opens Stripe Checkout
 api/stripe-webhook.php    On payment: files the order in Dropbox, emails Scott
+api/dropbox-connect.php   One-time: connects the shop to the Dropbox app
 api/_lib.php              Shared helpers (blocked from the web)
 ```
 
@@ -48,7 +49,6 @@ return [
     // Dropbox app (see below)
     'dropbox_app_key'       => '...',
     'dropbox_app_secret'    => '...',
-    'dropbox_refresh_token' => '...',
     'dropbox_app_folder'    => 'Magnet Fairy Shop',   // the app's folder name under Dropbox/Apps/
 
     'notify_email' => 'scott@themagnetfairy.com',
@@ -58,6 +58,7 @@ return [
     // 'stripe_tax' = Stripe Tax figures NC tax by county (and on shipping). 'none' = no tax.
     'tax_mode'     => 'stripe_tax',
     'rate_salt'    => 'any-random-words-here',
+    'setup_key'    => 'another-random-phrase',   // only used by api/dropbox-connect.php
 ];
 ```
 
@@ -72,15 +73,12 @@ and `ratelimit/` folders next to it. If something goes wrong, check
 2. Permissions tab: tick `files.metadata.read`, `files.content.write`,
    `files.content.read`. Submit.
 3. Settings tab: copy the App key and App secret into the config.
-4. Get a refresh token: open
-   `https://www.dropbox.com/oauth2/authorize?client_id=APP_KEY&response_type=code&token_access_type=offline`,
-   click Allow, copy the code, then exchange it:
-   ```
-   curl https://api.dropboxapi.com/oauth2/token \
-     -d code=THE_CODE -d grant_type=authorization_code \
-     -u APP_KEY:APP_SECRET
-   ```
-   Put the `refresh_token` from the reply in the config.
+4. Settings tab > OAuth 2 > Redirect URIs: add
+   `https://themagnetfairy.com/api/dropbox-connect.php`.
+5. After deploying, open
+   `https://themagnetfairy.com/api/dropbox-connect.php?key=SETUP_KEY`
+   (SETUP_KEY = `setup_key` in the config) and click Allow. The refresh token
+   is saved to `magnet-fairy-private/dropbox-refresh.json` automatically.
 
 ## Stripe (one time)
 
