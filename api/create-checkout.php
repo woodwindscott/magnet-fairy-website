@@ -168,7 +168,7 @@ $params = [
         'description' => 'The Magnet Fairy order #' . strtoupper(substr($cartId, -6)),
         'metadata' => ['cart_id' => $cartId],
     ],
-    'success_url' => $base . '/shop/thanks.html?session_id={CHECKOUT_SESSION_ID}',
+    'success_url' => $base . '/shop/thanks.html',
     'cancel_url' => $base . '/shop/?canceled=1#cart',
     'expires_at' => time() + 3600 * 6,
 ];
