@@ -140,15 +140,26 @@ $shipping = [
         'maximum' => ['unit' => 'business_day', 'value' => 9],
     ],
 ];
+$pickup = [
+    'type' => 'fixed_amount',
+    'display_name' => $cat['pickup_label'] ?? 'Free local pickup in Cary, NC',
+    'fixed_amount' => ['amount' => 0, 'currency' => $cat['currency']],
+    'tax_behavior' => 'exclusive',
+    'metadata' => ['method' => 'pickup'],
+];
+$shipping['metadata'] = ['method' => 'ship'];
 if (($cfg['tax_mode'] ?? 'none') === 'stripe_tax') {
     $shipping['tax_code'] = 'txcd_92010001';
+    $pickup['tax_code'] = 'txcd_92010001';
 }
 
 $params = [
     'mode' => 'payment',
     'line_items' => $lineItems,
     'shipping_address_collection' => ['allowed_countries' => ['US']],
-    'shipping_options' => [['shipping_rate_data' => $shipping]],
+    // Pickup customers still enter an address (Stripe asks everyone when shipping
+    // is offered); the email and order.txt flag pickup orders clearly.
+    'shipping_options' => [['shipping_rate_data' => $shipping], ['shipping_rate_data' => $pickup]],
     'phone_number_collection' => ['enabled' => 'true'],
     'billing_address_collection' => 'required',
     'client_reference_id' => $cartId,

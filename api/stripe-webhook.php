@@ -56,7 +56,7 @@ if (!empty($order['finalized'])) {
 
 try {
     // Full session with line items, so totals and tax are exact.
-    $full = mf_stripe('GET', 'checkout/sessions/' . rawurlencode($session['id']), ['expand' => ['line_items']]);
+    $full = mf_stripe('GET', 'checkout/sessions/' . rawurlencode($session['id']), ['expand' => ['line_items', 'shipping_cost.shipping_rate']]);
     $result = mf_finalize($cfg, $order, $full);
 } catch (Throwable $e) {
     mf_log('webhook finalize ' . $cartId . ': ' . $e->getMessage());
@@ -107,9 +107,12 @@ function mf_finalize(array $cfg, array $order, array $s): array
 {
     $c = mf_customer($s);
     $num = $order['order_number'];
+    $rate = $s['shipping_cost']['shipping_rate'] ?? null;
+    $pickup = is_array($rate) && (($rate['metadata']['method'] ?? '') === 'pickup');
+    $method = is_array($rate) ? (string) ($rate['display_name'] ?? '') : '';
     $date = date('Y-m-d', (int) ($s['created'] ?? time()));
     $test = empty($s['livemode']) ? ' TEST' : '';
-    $folder = '/Orders/' . $date . ' ' . mf_last_name($c['name']) . ' #' . $num . $test;
+    $folder = '/Orders/' . $date . ' ' . mf_last_name($c['name']) . ' #' . $num . ($pickup ? ' PICKUP' : '') . $test;
     $from = '/Pending/' . $order['cart_id'];
 
     // 1. Move the folder (skip if a retry already did it).
@@ -138,14 +141,19 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $t = "THE MAGNET FAIRY ORDER #{$num}" . ($test ? '  (TEST MODE - not a real order)' : '') . "\n";
     $t .= "Paid: " . date('l, F j, Y g:i a', (int) ($s['created'] ?? time())) . "\n";
     $t .= str_repeat('=', 60) . "\n\n";
-    $t .= "SHIP TO\n" . $c['name'] . "\n" . mf_address_lines($c['address']) . "\n\n";
+    if ($pickup) {
+        $t .= ">>> LOCAL PICKUP in Cary. Email the customer to set a time. Do not ship. <<<\n\n";
+        $t .= "CUSTOMER\n" . $c['name'] . "\n" . mf_address_lines($c['address']) . "\n\n";
+    } else {
+        $t .= "SHIP TO\n" . $c['name'] . "\n" . mf_address_lines($c['address']) . "\n\n";
+    }
     $t .= "Email: " . $c['email'] . "\nPhone: " . $c['phone'] . "\n\n";
     if ($c['billing_name'] && $c['billing_name'] !== $c['name']) {
         $t .= "Billing name: " . $c['billing_name'] . "\n\n";
     }
     $t .= "TOTALS\n";
     $t .= "Magnets:  " . mf_money($amountSub) . "\n";
-    $t .= "Shipping: " . mf_money($amountShip) . "\n";
+    $t .= "Shipping: " . mf_money($amountShip) . ($method !== '' ? "  (" . $method . ")" : '') . "\n";
     $t .= "Tax:      " . mf_money($amountTax) . "\n";
     $t .= "Total:    " . mf_money($amountTotal) . "\n\n";
     $t .= str_repeat('=', 60) . "\nMAGNETS\n";
@@ -178,7 +186,7 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $link = 'https://www.dropbox.com/home/Apps/' . rawurlencode($cfg['dropbox_app_folder']) .
         str_replace('%2F', '/', rawurlencode($folder));
     if (empty($order['emailed'])) {
-        $subject = ($test ? '[TEST] ' : '') . 'New magnet order #' . $num . ' - ' . $c['name'] . ' - ' . $m . ' magnet' . ($m === 1 ? '' : 's');
+        $subject = ($test ? '[TEST] ' : '') . ($pickup ? '[PICKUP] ' : '') . 'New magnet order #' . $num . ' - ' . $c['name'] . ' - ' . $m . ' magnet' . ($m === 1 ? '' : 's');
         $body = "New order! " . $m . " magnet" . ($m === 1 ? '' : 's') . ", " . mf_money($amountTotal) . " total.\n\n" .
             "Photos and order.txt:\n" . $link . "\n\n" . $t;
         if (!mf_notify($cfg, $subject, $body, $c['email'])) {
