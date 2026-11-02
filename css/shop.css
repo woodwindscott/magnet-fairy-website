@@ -2,6 +2,10 @@
    The Magnet Fairy — shop styles
    Uses the design tokens from styles.css
 --------------------------------------------- */
+[hidden] {
+  display: none !important;
+}
+
 .nav-home {
   color: var(--color-text);
   text-decoration: none;
