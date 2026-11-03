@@ -100,7 +100,7 @@
     <div class="sheet-head">
       <div>
         <h2 class="sheet-title" id="crop-title">Crop your photo</h2>
-        <p class="text-muted sheet-sub">Drag the box to frame your photo. Everything inside the dashed line shows on the front. The outer band wraps around the edge.</p>
+        <p class="text-muted sheet-sub">Drag the photo to move it. Pinch or use + and − to zoom. Everything inside the dashed line shows on the front. The pink band wraps around the edge.</p>
       </div>
       <button class="icon-btn" type="button" id="crop-cancel" aria-label="Cancel">&times;</button>
     </div>
@@ -111,8 +111,13 @@
         <button type="button" class="chip" data-orient="portrait">Tall</button>
         <button type="button" class="chip" data-orient="landscape">Wide</button>
       </div>
-      <button type="button" class="chip" id="crop-rotate">Rotate</button>
+      <div class="orient" role="group" aria-label="Zoom and rotate">
+        <button type="button" class="chip zoom-btn" id="zoom-out" aria-label="Zoom out">&minus;</button>
+        <button type="button" class="chip zoom-btn" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" class="chip" id="crop-rotate">Rotate</button>
+      </div>
     </div>
+    <p class="crop-help">Can't get it quite right? <button type="button" class="link-btn" id="crop-skip">Let me crop it for you</button></p>
     <div class="sheet-foot">
       <button class="btn btn-secondary" type="button" id="crop-replace">Choose a different photo</button>
       <button class="btn btn-primary" type="button" id="crop-done">Use this crop</button>

@@ -157,7 +157,9 @@
   }
 
   function photoReady(p) {
-    return p && p.crop && p.origStatus === "done" && p.printStatus === "done";
+    if (!p || p.origStatus !== "done") return false;
+    if (p.scottCrops) return true; // Scott crops it himself; no print file
+    return !!p.crop && p.printStatus === "done";
   }
 
   function renderSlots() {
@@ -180,13 +182,13 @@
           slot.appendChild(img);
         }
         var status = el("span", "slot-status");
-        if (p.origStatus === "error" || p.printStatus === "error") {
+        if (p.origStatus === "error" || (!p.scottCrops && p.printStatus === "error")) {
           status.classList.add("err");
           status.textContent = "Upload failed. Tap to retry";
         } else if (photoReady(p)) {
           status.classList.add("ok");
-          status.textContent = "Ready · tap to re-crop";
-        } else if (!p.crop) {
+          status.textContent = p.scottCrops ? "I'll crop this one" : "Ready · tap to re-crop";
+        } else if (!p.crop && !p.scottCrops) {
           status.textContent = "Needs cropping";
         } else {
           status.textContent = "Uploading " + Math.round((p.progress || 0) * 100) + "%";
@@ -204,7 +206,7 @@
 
   function onSlot(i) {
     var p = draft.photos[i];
-    if (p && (p.origStatus === "error" || p.printStatus === "error")) {
+    if (p && (p.origStatus === "error" || (!p.scottCrops && p.printStatus === "error"))) {
       if (p.file) { retryUploads(p); return; }
     }
     if (p && p.objectUrl) {
@@ -274,27 +276,58 @@
     // Wait a frame so the stage has its size before Cropper measures it.
     window.requestAnimationFrame(function () {
       cropper = new window.Cropper(img, {
+        // The frame stays put; the customer moves and zooms the photo under it.
         viewMode: 1,
-        dragMode: "none",
+        dragMode: "move",
         aspectRatio: aspectFor(cropOrientation),
-        autoCropArea: 1,
-        movable: false,
-        zoomable: false,
+        autoCropArea: 0.92,
+        movable: true,
+        zoomable: true,
+        zoomOnTouch: true,
+        zoomOnWheel: true,
+        wheelZoomRatio: 0.08,
+        cropBoxMovable: false,
+        cropBoxResizable: false,
         scalable: false,
         rotatable: true,
         guides: false,
         center: false,
+        highlight: false,
         background: false,
         checkOrientation: false,
         toggleDragModeOnDblclick: false,
         data: p.crop ? { x: p.crop.x, y: p.crop.y, width: p.crop.width, height: p.crop.height, rotate: p.crop.rotate } : undefined,
         ready: function () {
+          rememberMinZoom();
           drawGuide();
           checkResolution();
+        },
+        zoom: function (e) {
+          // Don't let the photo shrink smaller than the frame.
+          if (e.detail.ratio < e.detail.oldRatio && e.detail.ratio < minZoom * 0.999) {
+            e.preventDefault();
+            if (cropper && e.detail.oldRatio > minZoom) cropper.zoomTo(minZoom);
+          }
         },
         crop: checkResolution
       });
     });
+  }
+
+  var minZoom = 0;
+  function rememberMinZoom() {
+    if (!cropper) return;
+    var c = cropper.getCanvasData();
+    var img = cropper.getImageData();
+    minZoom = img.naturalWidth ? c.width / img.naturalWidth : 0;
+  }
+
+  function resetFrame() {
+    if (!cropper) return;
+    cropper.reset();
+    cropper.setAspectRatio(aspectFor(cropOrientation));
+    rememberMinZoom();
+    drawGuide();
   }
 
   function aspectFor(orientation) {
@@ -340,9 +373,8 @@
   function setOrientation(o) {
     if (!cropper || draft.size === "square" || o === cropOrientation) return;
     cropOrientation = o;
-    cropper.setAspectRatio(aspectFor(o));
+    resetFrame();
     updateOrientChips();
-    drawGuide();
   }
 
   function closeCropper() {
@@ -365,6 +397,7 @@
     });
     if (!canvas) { showToast("Couldn't crop that photo. Please try again."); return; }
     p.orientation = cropOrientation;
+    p.scottCrops = false;
     p.crop = { x: d.x, y: d.y, width: d.width, height: d.height, rotate: d.rotate || 0 };
     // Small thumbnail for the cart.
     var t = document.createElement("canvas");
@@ -379,6 +412,31 @@
       startPrintUpload(p);
     }, "image/jpeg", 0.92);
     closeCropper();
+    renderSlots();
+  }
+
+  // Customer can't get the crop right: send the original and let Scott crop it.
+  function letScottCrop() {
+    if (!cropTarget) return;
+    var p = cropTarget;
+    p.orientation = cropOrientation;
+    p.scottCrops = true;
+    p.crop = null;
+    p.printPath = "";
+    p.printBlob = null;
+    p.printStatus = "done";
+    p.printBytes = 0;
+    p.printSent = 0;
+    var img = $("crop-img");
+    var t = document.createElement("canvas");
+    var w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+    var scale = 200 / Math.max(w, h);
+    t.width = Math.max(1, Math.round(w * scale));
+    t.height = Math.max(1, Math.round(h * scale));
+    t.getContext("2d").drawImage(img, 0, 0, t.width, t.height);
+    p.thumb = t.toDataURL("image/jpeg", 0.75);
+    closeCropper();
+    updateProgress(p);
     renderSlots();
   }
 
@@ -482,7 +540,8 @@
       photos: draft.photos.map(function (p) {
         return {
           id: p.id, name: p.name, w: p.w, h: p.h, orientation: p.orientation,
-          crop: p.crop, original_path: p.originalPath, print_path: p.printPath, thumb: p.thumb
+          crop: p.crop, scott_crops: !!p.scottCrops,
+          original_path: p.originalPath, print_path: p.printPath || "", thumb: p.thumb
         };
       })
     });
@@ -567,7 +626,8 @@
           photos: it.photos.map(function (p) {
             return {
               id: p.id, name: p.name, w: p.w, h: p.h, orientation: p.orientation,
-              crop: p.crop, original_path: p.original_path, print_path: p.print_path
+              crop: p.crop, scott_crops: !!p.scott_crops,
+              original_path: p.original_path, print_path: p.print_path || ""
             };
           })
         };
@@ -668,8 +728,12 @@
       if (!cropper) return;
       cropper.rotate(90);
       cropper.setAspectRatio(aspectFor(cropOrientation));
+      rememberMinZoom();
       drawGuide();
     });
+    $("zoom-in").addEventListener("click", function () { if (cropper) cropper.zoom(0.15); });
+    $("zoom-out").addEventListener("click", function () { if (cropper) cropper.zoom(-0.15); });
+    $("crop-skip").addEventListener("click", letScottCrop);
     $("crop-replace").addEventListener("click", function () {
       if (!draft || !cropTarget) return;
       slotIndex = draft.photos.indexOf(cropTarget);

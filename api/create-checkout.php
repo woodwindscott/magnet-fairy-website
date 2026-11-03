@@ -53,7 +53,11 @@ foreach ($items as $n => $it) {
     foreach ($photos as $p) {
         $orig = (string) ($p['original_path'] ?? '');
         $print = (string) ($p['print_path'] ?? '');
-        foreach ([$orig, $print] as $path) {
+        $scottCrops = !empty($p['scott_crops']);
+        if ($scottCrops) {
+            $print = '';
+        }
+        foreach (array_filter([$orig, $print === '' && $scottCrops ? null : $print]) as $path) {
             if (strpos($path, $prefix) !== 0 || strpos($path, '..') !== false || strlen($path) > 200) {
                 mf_json(['error' => 'A photo is missing. Please remove that pack and add it again.'], 400);
             }
@@ -75,6 +79,7 @@ foreach ($items as $n => $it) {
             ],
             'original_path' => $orig,
             'print_path' => $print,
+            'scott_crops' => $scottCrops,
         ];
     }
     $price = (int) $s['packs'][(string) $pack];
@@ -119,7 +124,8 @@ try {
     }
     foreach ($clean as $it) {
         foreach ($it['photos'] as $p) {
-            if (empty($found[strtolower($p['original_path'])]) || empty($found[strtolower($p['print_path'])])) {
+            $printMissing = !$p['scott_crops'] && empty($found[strtolower($p['print_path'])]);
+            if (empty($found[strtolower($p['original_path'])]) || $printMissing) {
                 mf_json(['error' => 'One of your photos did not finish uploading. Please remove that pack and add it again.'], 400);
             }
         }

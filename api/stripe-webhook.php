@@ -162,15 +162,22 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $t .= "  ORIGINAL = the customer's full-resolution photo\n";
     $t .= "Crop numbers are pixels on the original as it displays upright.\n\n";
     $m = 0;
+    $needCrop = 0;
     foreach ($order['items'] as $i => $it) {
         $t .= ($i + 1) . ". " . $it['label'] . "  (" . mf_money((int) $it['price']) . ")\n";
         foreach ($it['photos'] as $j => $p) {
             $m++;
             $cr = $p['crop'];
             $t .= "   Magnet {$m}: " . $p['orientation'] . "\n";
-            $t .= "      PRINT:    " . $rel($p['print_path']) . "\n";
-            $t .= "      ORIGINAL: " . $rel($p['original_path']) . "  (" . $p['w'] . " x " . $p['h'] . ")\n";
-            $t .= "      Crop: x={$cr['x']} y={$cr['y']} w={$cr['width']} h={$cr['height']}" . ($cr['rotate'] ? " rotated {$cr['rotate']}" : '') . "\n";
+            if (!empty($p['scott_crops'])) {
+                $needCrop++;
+                $t .= "      *** CUSTOMER ASKED YOU TO CROP THIS ONE ***\n";
+                $t .= "      ORIGINAL: " . $rel($p['original_path']) . "  (" . $p['w'] . " x " . $p['h'] . ")\n";
+            } else {
+                $t .= "      PRINT:    " . $rel($p['print_path']) . "\n";
+                $t .= "      ORIGINAL: " . $rel($p['original_path']) . "  (" . $p['w'] . " x " . $p['h'] . ")\n";
+                $t .= "      Crop: x={$cr['x']} y={$cr['y']} w={$cr['width']} h={$cr['height']}" . ($cr['rotate'] ? " rotated {$cr['rotate']}" : '') . "\n";
+            }
         }
         $t .= "\n";
     }
@@ -186,8 +193,9 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $link = 'https://www.dropbox.com/home/Apps/' . rawurlencode($cfg['dropbox_app_folder']) .
         str_replace('%2F', '/', rawurlencode($folder));
     if (empty($order['emailed'])) {
-        $subject = ($test ? '[TEST] ' : '') . ($pickup ? '[PICKUP] ' : '') . 'New magnet order #' . $num . ' - ' . $c['name'] . ' - ' . $m . ' magnet' . ($m === 1 ? '' : 's');
-        $body = "New order! " . $m . " magnet" . ($m === 1 ? '' : 's') . ", " . mf_money($amountTotal) . " total.\n\n" .
+        $subject = ($test ? '[TEST] ' : '') . ($pickup ? '[PICKUP] ' : '') . ($needCrop ? '[CROP NEEDED] ' : '') . 'New magnet order #' . $num . ' - ' . $c['name'] . ' - ' . $m . ' magnet' . ($m === 1 ? '' : 's');
+        $body = "New order! " . $m . " magnet" . ($m === 1 ? '' : 's') . ", " . mf_money($amountTotal) . " total.\n" .
+            ($needCrop ? ">>> " . $needCrop . " photo" . ($needCrop === 1 ? '' : 's') . " for you to crop (see order.txt).\n" : '') . "\n" .
             "Photos and order.txt:\n" . $link . "\n\n" . $t;
         if (!mf_notify($cfg, $subject, $body, $c['email'])) {
             throw new RuntimeException('mail() failed');

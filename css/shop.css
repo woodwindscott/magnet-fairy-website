@@ -445,6 +445,22 @@
   border-color: var(--color-accent);
 }
 
+.zoom-btn {
+  min-width: 44px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.crop-help {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.crop-stage .cropper-container {
+  touch-action: none;
+}
+
 .crop-warning {
   margin: 0;
   padding: 8px 12px;
