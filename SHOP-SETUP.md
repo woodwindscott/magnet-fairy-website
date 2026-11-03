@@ -53,6 +53,10 @@ return [
 
     'notify_email' => 'scott@themagnetfairy.com',
     'mail_from'    => 'shop@themagnetfairy.com',
+    // Order emails go through Google (Bluehost drops mail to our own domain).
+    // smtp_pass = a Google app password for smtp_user (spaces are fine).
+    'smtp_user'    => 'scott@themagnetfairy.com',
+    'smtp_pass'    => '',
     'site_url'     => 'https://themagnetfairy.com',
 
     // 'stripe_tax' = Stripe Tax figures NC tax by county (and on shipping). 'none' = no tax.
@@ -104,3 +108,10 @@ Check: Dropbox folder moved and named, `order.txt` is right, the email arrived.
 
 Edit `shop/products.json` (amounts are in cents) and deploy. The page and the
 server both read that file, so they always agree.
+
+
+## Order email (fixed 2026-11-02)
+Bluehost's mail server treats themagnetfairy.com as a local domain and silently
+drops mail to scott@ even with Email Routing set to Remote. Order emails are sent
+through Gmail SMTP (smtp.gmail.com:465) with a Google app password in `smtp_pass`.
+Test from cPanel Terminal: `php ~/public_html/api/_mail-test.php`

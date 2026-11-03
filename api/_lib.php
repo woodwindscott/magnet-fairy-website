@@ -328,3 +328,74 @@ function mf_money(int $cents): string
 {
     return '$' . number_format($cents / 100, 2);
 }
+
+// ---------------------------------------------------------------------------
+// Email via Google (Gmail SMTP, port 465, app password).
+// Bluehost's own mail server treats themagnetfairy.com as local and silently
+// drops mail to scott@ (found 2026-11-02), so order emails go through Google.
+// config.php keys: smtp_user (e.g. scott@themagnetfairy.com), smtp_pass
+// (a Google app password). Without smtp_pass we fall back to PHP mail().
+// ---------------------------------------------------------------------------
+function mf_smtp_send(array $cfg, string $to, string $subject, string $body, string $replyTo = ''): bool
+{
+    $user = (string) ($cfg['smtp_user'] ?? '');
+    $pass = str_replace(' ', '', (string) ($cfg['smtp_pass'] ?? ''));
+    $host = (string) ($cfg['smtp_host'] ?? 'smtp.gmail.com');
+    $port = (int) ($cfg['smtp_port'] ?? 465);
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
+    $fp = @stream_socket_client("ssl://{$host}:{$port}", $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$fp) {
+        mf_log("SMTP connect failed: {$errno} {$errstr}");
+        return false;
+    }
+    stream_set_timeout($fp, 20);
+    $read = function () use ($fp): string {
+        $out = '';
+        while (($line = fgets($fp, 1024)) !== false) {
+            $out .= $line;
+            if (strlen($line) < 4 || $line[3] === ' ') {
+                break;
+            }
+        }
+        return $out;
+    };
+    // $label is what gets logged on failure, so credentials never reach the log.
+    $cmd = function (?string $c, array $ok, string $label) use ($fp, $read): bool {
+        if ($c !== null) {
+            fwrite($fp, $c . "\r\n");
+        }
+        $r = $read();
+        if (!in_array((int) substr($r, 0, 3), $ok, true)) {
+            mf_log('SMTP error at ' . $label . ': ' . trim($r));
+            return false;
+        }
+        return true;
+    };
+    $from = $user;
+    $headers = [
+        'Date: ' . date('r'),
+        'From: The Magnet Fairy Shop <' . $from . '>',
+        'To: <' . $to . '>',
+        'Subject: =?UTF-8?B?' . base64_encode($subject) . '?=',
+        'Message-ID: <' . bin2hex(random_bytes(12)) . '@themagnetfairy.com>',
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: base64',
+    ];
+    if ($replyTo && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+        $headers[] = 'Reply-To: <' . $replyTo . '>';
+    }
+    $data = implode("\r\n", $headers) . "\r\n\r\n" . rtrim(chunk_split(base64_encode($body), 76, "\r\n")) . "\r\n.";
+    $ok = $cmd(null, [220], 'greeting')
+        && $cmd('EHLO themagnetfairy.com', [250], 'EHLO')
+        && $cmd('AUTH LOGIN', [334], 'AUTH')
+        && $cmd(base64_encode($user), [334], 'username')
+        && $cmd(base64_encode($pass), [235], 'password (check smtp_user / smtp_pass)')
+        && $cmd('MAIL FROM:<' . $from . '>', [250], 'MAIL FROM')
+        && $cmd('RCPT TO:<' . $to . '>', [250, 251], 'RCPT TO')
+        && $cmd('DATA', [354], 'DATA')
+        && $cmd($data, [250], 'message body');
+    @fwrite($fp, "QUIT\r\n");
+    fclose($fp);
+    return $ok;
+}

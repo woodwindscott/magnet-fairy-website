@@ -219,6 +219,12 @@ function mf_notify(array $cfg, string $subject, string $body, string $replyTo = 
         mf_log("MAIL to {$cfg['notify_email']}: {$subject}\n{$body}");
         return true;
     }
+    if (!empty($cfg['smtp_pass']) && !empty($cfg['smtp_user'])) {
+        if (mf_smtp_send($cfg, $cfg['notify_email'], $subject, $body, $replyTo)) {
+            return true;
+        }
+        mf_log('SMTP send failed; trying mail() as a fallback');
+    }
     $from = $cfg['mail_from'] ?? 'shop@themagnetfairy.com';
     $headers = [
         'From: The Magnet Fairy Shop <' . $from . '>',
