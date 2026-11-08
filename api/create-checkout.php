@@ -159,15 +159,16 @@ if (($cfg['tax_mode'] ?? 'none') === 'stripe_tax') {
     $pickup['tax_code'] = 'txcd_92010001';
 }
 
+// The customer picks ship or pickup in the cart before checkout.
+// Pickup: no shipping address is asked for. Tax is figured at the pickup
+// spot in Cary, which is the right NC rule for an in-person pickup, by giving
+// Stripe a customer whose shipping address is the pickup location.
+$isPickup = (($in['delivery'] ?? 'ship') === 'pickup');
+
 $params = [
     'mode' => 'payment',
     'line_items' => $lineItems,
-    'shipping_address_collection' => ['allowed_countries' => ['US']],
-    // Pickup customers still enter an address (Stripe asks everyone when shipping
-    // is offered); the email and order.txt flag pickup orders clearly.
-    'shipping_options' => [['shipping_rate_data' => $shipping], ['shipping_rate_data' => $pickup]],
     'phone_number_collection' => ['enabled' => 'true'],
-    'billing_address_collection' => 'required',
     'client_reference_id' => $cartId,
     'metadata' => ['cart_id' => $cartId, 'order_number' => strtoupper(substr($cartId, -6)), 'magnets' => (string) $magnetCount],
     'payment_intent_data' => [
@@ -182,9 +183,38 @@ if (($cfg['tax_mode'] ?? 'none') === 'stripe_tax') {
     $params['automatic_tax'] = ['enabled' => 'true'];
 }
 
+$hash = substr(hash('sha256', json_encode($clean) . ($isPickup ? 'P' : 'S')), 0, 16);
+if ($isPickup) {
+    $params['shipping_options'] = [['shipping_rate_data' => $pickup]];
+    $params['billing_address_collection'] = 'auto';
+    try {
+        $cust = mf_stripe('POST', 'customers', [
+            'shipping' => [
+                'name' => MF_PICKUP_NAME,
+                'address' => [
+                    'line1' => $cfg['pickup_line1'] ?? '1113 Imperial Road',
+                    'city' => $cfg['pickup_city'] ?? 'Cary',
+                    'state' => 'NC',
+                    'postal_code' => $cfg['pickup_zip'] ?? '27511',
+                    'country' => 'US',
+                ],
+            ],
+            'metadata' => ['cart_id' => $cartId, 'pickup' => 'yes'],
+        ], 'mf-cust-' . $cartId . '-' . $hash . '-' . date('YmdH'));
+        $params['customer'] = $cust['id'];
+    } catch (Throwable $e) {
+        mf_log('create-checkout pickup customer: ' . $e->getMessage());
+        mf_json(['error' => 'Checkout is having trouble right now. Please try again in a minute.'], 502);
+    }
+} else {
+    $params['shipping_address_collection'] = ['allowed_countries' => ['US']];
+    $params['shipping_options'] = [['shipping_rate_data' => $shipping]];
+    $params['billing_address_collection'] = 'required';
+}
+
 try {
     // Same cart + same contents = same session (safe against double clicks).
-    $idem = 'mf-' . $cartId . '-' . substr(hash('sha256', json_encode($clean)), 0, 16) . '-' . date('YmdH');
+    $idem = 'mf-' . $cartId . '-' . $hash . '-' . date('YmdH');
     $session = mf_stripe('POST', 'checkout/sessions', $params, $idem);
 } catch (Throwable $e) {
     mf_log('create-checkout stripe: ' . $e->getMessage());
@@ -198,7 +228,8 @@ mf_save_order([
     'session_id' => $session['id'],
     'livemode' => !empty($session['livemode']),
     'subtotal' => $subtotal,
-    'shipping' => (int) $cat['shipping_cents'],
+    'shipping' => $isPickup ? 0 : (int) $cat['shipping_cents'],
+    'pickup' => $isPickup,
     'items' => $clean,
     'paid' => false,
 ]);

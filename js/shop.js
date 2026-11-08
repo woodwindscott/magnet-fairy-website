@@ -602,8 +602,15 @@
     $("cart-summary").hidden = !has;
     var sub = cartSubtotal();
     $("cart-subtotal").textContent = money(sub);
-    $("cart-shipping").textContent = money(catalog.shipping_cents);
-    $("cart-total").textContent = money(sub + catalog.shipping_cents);
+    var pickup = cart.delivery === "pickup";
+    var ship = pickup ? 0 : catalog.shipping_cents;
+    $("cart-shipping-label").textContent = pickup ? "Pickup in Cary" : "Shipping";
+    $("cart-shipping").textContent = pickup ? "Free" : money(ship);
+    $("cart-total").textContent = money(sub + ship);
+    $("pickup-note").hidden = !pickup;
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="delivery"]'), function (r) {
+      r.checked = r.value === (pickup ? "pickup" : "ship");
+    });
     var count = cart.items.reduce(function (n, it) { return n + it.pack; }, 0);
     var badge = $("cart-count");
     badge.hidden = count === 0;
@@ -619,6 +626,7 @@
     btn.textContent = "Starting checkout…";
     var payload = {
       cart_id: cart.id,
+      delivery: cart.delivery === "pickup" ? "pickup" : "ship",
       items: cart.items.map(function (it) {
         return {
           size: it.size,
@@ -639,7 +647,7 @@
         btn.textContent = "Check out securely";
         err.hidden = false;
         err.textContent = "Test preview: on the real site this goes to Stripe's secure checkout page for " +
-          money(cartSubtotal() + catalog.shipping_cents) + " plus NC tax if it applies.";
+          money(cartSubtotal() + (cart.delivery === "pickup" ? 0 : catalog.shipping_cents)) + " plus NC tax if it applies.";
       }, 600);
       return;
     }
@@ -746,6 +754,14 @@
       b.addEventListener("click", function () { setOrientation(b.getAttribute("data-orient")); });
     });
     $("checkout-btn").addEventListener("click", checkout);
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="delivery"]'), function (r) {
+      r.addEventListener("change", function () {
+        if (!r.checked) return;
+        cart.delivery = r.value === "pickup" ? "pickup" : "ship";
+        saveCart();
+        renderCart();
+      });
+    });
     document.addEventListener("keydown", function (e) {
       if (e.key !== "Escape") return;
       if (!$("cropper").hidden) $("crop-cancel").click();

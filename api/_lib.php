@@ -9,7 +9,10 @@
 
 declare(strict_types=1);
 
-const MF_VERSION = '2026-11-01';
+const MF_VERSION = '2026-11-07';
+
+// Name on the Stripe customer used to tax pickup orders at the Cary pickup spot.
+const MF_PICKUP_NAME = 'Local pickup (The Magnet Fairy)';
 
 date_default_timezone_set('America/New_York');
 

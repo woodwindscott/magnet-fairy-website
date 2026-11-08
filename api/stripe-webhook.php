@@ -71,6 +71,9 @@ mf_json(['received' => true, 'folder' => $result['folder']]);
 function mf_customer(array $s): array
 {
     $ship = $s['collected_information']['shipping_details'] ?? ($s['shipping_details'] ?? null);
+    if (is_array($ship) && ($ship['name'] ?? '') === MF_PICKUP_NAME) {
+        $ship = null; // pickup order: the "shipping" address is the Cary pickup spot, not the customer
+    }
     $cd = $s['customer_details'] ?? [];
     $name = trim((string) ($ship['name'] ?? ($cd['name'] ?? 'Customer')));
     $addr = $ship['address'] ?? ($cd['address'] ?? []);
