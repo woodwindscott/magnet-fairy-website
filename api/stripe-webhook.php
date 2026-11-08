@@ -161,7 +161,7 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $t .= "Total:    " . mf_money($amountTotal) . "\n\n";
     $t .= str_repeat('=', 60) . "\nMAGNETS\n";
     $t .= "Each magnet has two files:\n";
-    $t .= "  PRINT    = ready to print, already cropped to the paper cut size at 300 dpi\n";
+    $t .= "  PRINT    = ready to print, already cropped to the paper cut size, full resolution (at least 300 dpi)\n";
     $t .= "  ORIGINAL = the customer's full-resolution photo\n";
     $t .= "Crop numbers are pixels on the original as it displays upright.\n\n";
     $m = 0;

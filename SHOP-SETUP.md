@@ -22,7 +22,7 @@ api/_lib.php              Shared helpers (blocked from the web)
 1. Customer picks a size and pack, then a photo for each magnet.
 2. The **original** photo uploads straight from their phone to Dropbox
    (`Apps/<app folder>/Pending/<cart id>/`). Nothing is shrunk.
-3. They crop. A **print-ready** JPEG (paper cut size, 300 dpi) uploads too.
+3. They crop. A **print-ready** JPEG (paper cut size, full resolution, never under 300 dpi) uploads too.
 4. Checkout: `create-checkout.php` re-prices the cart from `products.json`,
    confirms every photo is in Dropbox, and sends them to Stripe Checkout.
 5. Stripe calls `stripe-webhook.php` when the payment succeeds. It moves the

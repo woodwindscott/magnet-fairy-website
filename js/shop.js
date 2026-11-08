@@ -4,7 +4,7 @@
 // photo -> the ORIGINAL file uploads straight from the browser to Scott's
 // Dropbox (via a temporary upload link from api/get-upload-link.php) while
 // the customer crops it -> on "Use this crop" a print-ready JPEG of the crop
-// (paper size at 300 dpi) uploads too -> pack goes in the cart (localStorage)
+// (full resolution, at least 300 dpi) uploads too -> pack goes in the cart (localStorage)
 // -> checkout posts the cart to api/create-checkout.php, which checks prices
 // on the server and redirects to Stripe Checkout.
 //
@@ -387,10 +387,15 @@
     if (!cropper || !cropTarget) return;
     var p = cropTarget;
     var d = cropper.getData(true);
+    // Print file keeps the photo's full resolution inside the crop.
+    // Never below 300 dpi at paper size; capped at 16 MP because iPhone
+    // Safari can't draw a bigger canvas.
     var px = printPx(draft.size, cropOrientation);
+    var scale = Math.max(1, d.width / px[0]);
+    scale = Math.min(scale, Math.sqrt(16000000 / (px[0] * px[1])));
     var canvas = cropper.getCroppedCanvas({
-      width: px[0],
-      height: px[1],
+      width: Math.round(px[0] * scale),
+      height: Math.round(px[1] * scale),
       fillColor: "#ffffff",
       imageSmoothingEnabled: true,
       imageSmoothingQuality: "high"
