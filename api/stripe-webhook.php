@@ -203,6 +203,21 @@ function mf_finalize(array $cfg, array $order, array $s): array
         $order['emailed'] = true;
     }
 
+    // 4. Confirmation email to the customer (from Scott, through Google).
+    // A failure here is logged, not retried, so it never blocks the order.
+    if (empty($order['customer_emailed']) && filter_var($c['email'], FILTER_VALIDATE_EMAIL)) {
+        if (empty($cfg['smtp_pass']) || empty($cfg['smtp_user'])) {
+            mf_log('Customer confirmation skipped for #' . $num . ': smtp not configured');
+        } elseif (mf_smtp_send($cfg, $c['email'],
+            ($test ? '[TEST] ' : '') . 'Your Magnet Fairy order #' . $num,
+            mf_customer_email($order, $c, $num, $pickup, $needCrop, $amountSub, $amountShip, $amountTax, $amountTotal),
+            (string) ($cfg['notify_email'] ?? ''))) {
+            $order['customer_emailed'] = true;
+        } else {
+            mf_log('Customer confirmation FAILED for #' . $num . ' to ' . $c['email']);
+        }
+    }
+
     $order['paid'] = true;
     $order['finalized'] = date('c');
     $order['customer'] = $c;
@@ -211,6 +226,37 @@ function mf_finalize(array $cfg, array $order, array $s): array
     $order['dropbox_link'] = $link;
     mf_save_order($order);
     return ['folder' => $folder];
+}
+
+function mf_customer_email(array $order, array $c, string $num, bool $pickup, int $needCrop,
+    int $sub, int $ship, int $tax, int $total): string
+{
+    $first = preg_split('/\s+/', trim($c['name']))[0] ?? '';
+    $first = ($first === '' || $first === 'Customer') ? 'there' : $first;
+    $b = "Hi {$first},\n\n";
+    $b .= "Thank you for your order! Your order number is #{$num}.\n\n";
+    $b .= "WHAT YOU ORDERED\n";
+    foreach ($order['items'] as $it) {
+        $b .= "- " . $it['label'] . "  " . mf_money((int) $it['price']) . "\n";
+    }
+    $b .= "\nMagnets:  " . mf_money($sub) . "\n";
+    $b .= ($pickup ? "Pickup:   " : "Shipping: ") . mf_money($ship) . "\n";
+    $b .= "Tax:      " . mf_money($tax) . "\n";
+    $b .= "Total:    " . mf_money($total) . "\n\n";
+    $b .= "WHAT HAPPENS NEXT\n";
+    $b .= "I press every magnet by hand here in Cary. Your magnets will be ready within 3 days.\n";
+    if ($pickup) {
+        $b .= "You chose free local pickup in Cary. I'll email you when they're ready to set up a pickup time.\n";
+    } else {
+        $b .= "I'll ship them right after that to:\n\n" . $c['name'] . "\n" . mf_address_lines($c['address']) . "\n";
+    }
+    if ($needCrop > 0) {
+        $b .= "\nYou asked me to crop " . ($needCrop === 1 ? "one photo" : $needCrop . " photos") . " for you. I'll take care of that.\n";
+    }
+    $b .= "\nIf anything about a photo needs a second look, I'll email you before I press it.\n\n";
+    $b .= "Questions? Just reply to this email or call (919) 451-7717.\n\n";
+    $b .= "Thank you,\nScott Moore\nThe Magnet Fairy\nthemagnetfairy.com\n";
+    return $b;
 }
 
 function mf_notify(array $cfg, string $subject, string $body, string $replyTo = ''): bool
