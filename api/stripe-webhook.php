@@ -134,7 +134,7 @@ function mf_finalize(array $cfg, array $order, array $s): array
 
     // 2. order.txt
     $amountSub = (int) ($s['amount_subtotal'] ?? $order['subtotal']);
-    $amountShip = (int) ($s['shipping_cost']['amount_total'] ?? $order['shipping']);
+    $amountShip = (int) ($s['shipping_cost']['amount_subtotal'] ?? $order['shipping']); // before tax; tax on shipping is in $amountTax
     $amountTax = (int) ($s['total_details']['amount_tax'] ?? 0);
     $amountTotal = (int) ($s['amount_total'] ?? 0);
 
