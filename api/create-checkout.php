@@ -17,7 +17,7 @@ $in = mf_read_json();
 $cartId = $in['cart_id'] ?? null;
 $items = $in['items'] ?? null;
 if (!mf_valid_cart_id($cartId) || !is_array($items) || !$items) {
-    mf_json(['error' => 'Your cart looks empty. Please add a pack and try again.'], 400);
+    mf_json(['error' => 'Your cart looks empty. Please add a bundle and try again.'], 400);
 }
 if (count($items) > 40) {
     mf_json(['error' => 'That is a big order! Please email scott@themagnetfairy.com and I will set it up for you.'], 400);
@@ -43,7 +43,7 @@ foreach ($items as $n => $it) {
     }
     $s = $cat['sizes'][$size];
     if (!isset($s['packs'][(string) $pack])) {
-        mf_json(['error' => 'Unknown pack in your cart. Please refresh and try again.'], 400);
+        mf_json(['error' => 'Unknown bundle in your cart. Please refresh and try again.'], 400);
     }
     $photos = $it['photos'] ?? [];
     if (!is_array($photos) || count($photos) !== $pack) {
@@ -59,7 +59,7 @@ foreach ($items as $n => $it) {
         }
         foreach (array_filter([$orig, $print === '' && $scottCrops ? null : $print]) as $path) {
             if (strpos($path, $prefix) !== 0 || strpos($path, '..') !== false || strlen($path) > 200) {
-                mf_json(['error' => 'A photo is missing. Please remove that pack and add it again.'], 400);
+                mf_json(['error' => 'A photo is missing. Please remove that bundle and add it again.'], 400);
             }
         }
         $orientation = in_array($p['orientation'] ?? '', $s['orientations'], true) ? $p['orientation'] : $s['orientations'][0];
@@ -85,7 +85,7 @@ foreach ($items as $n => $it) {
     $price = (int) $s['packs'][(string) $pack];
     $subtotal += $price;
     $magnetCount += $pack;
-    $label = $s['name'] . ($pack > 1 ? ' - ' . $pack . '-pack' : '');
+    $label = $s['name'] . ($pack > 1 ? ' - bundle of ' . $pack : '');
     $clean[] = ['size' => $size, 'pack' => $pack, 'price' => $price, 'label' => $label, 'photos' => $cleanPhotos];
 
     $productData = [
@@ -111,7 +111,7 @@ try {
     $found = [];
     $res = mf_dropbox('files/list_folder', ['path' => rtrim($prefix, '/'), 'limit' => 2000], true);
     if (!empty($res['_conflict'])) {
-        mf_json(['error' => 'Your photos did not finish uploading. Please remove the pack and add it again.'], 400);
+        mf_json(['error' => 'Your photos did not finish uploading. Please remove the bundle and add it again.'], 400);
     }
     while (true) {
         foreach ($res['entries'] ?? [] as $e) {
@@ -126,7 +126,7 @@ try {
         foreach ($it['photos'] as $p) {
             $printMissing = !$p['scott_crops'] && empty($found[strtolower($p['print_path'])]);
             if (empty($found[strtolower($p['original_path'])]) || $printMissing) {
-                mf_json(['error' => 'One of your photos did not finish uploading. Please remove that pack and add it again.'], 400);
+                mf_json(['error' => 'One of your photos did not finish uploading. Please remove that bundle and add it again.'], 400);
             }
         }
     }
@@ -136,10 +136,14 @@ try {
 }
 
 $base = rtrim($cfg['site_url'] ?? 'https://themagnetfairy.com', '/');
+// Free shipping once the magnets (before tax) reach the minimum in products.json.
+$freeMin = (int) ($cat['free_shipping_min_cents'] ?? 0);
+$freeShip = $freeMin > 0 && $subtotal >= $freeMin;
+$shipCents = $freeShip ? 0 : (int) $cat['shipping_cents'];
 $shipping = [
     'type' => 'fixed_amount',
-    'display_name' => $cat['shipping_label'] ?? 'Shipping',
-    'fixed_amount' => ['amount' => (int) $cat['shipping_cents'], 'currency' => $cat['currency']],
+    'display_name' => $freeShip ? ($cat['free_shipping_label'] ?? 'Free shipping') : ($cat['shipping_label'] ?? 'Shipping'),
+    'fixed_amount' => ['amount' => $shipCents, 'currency' => $cat['currency']],
     'tax_behavior' => 'exclusive',
     'delivery_estimate' => [
         'minimum' => ['unit' => 'business_day', 'value' => 4],
@@ -228,7 +232,7 @@ mf_save_order([
     'session_id' => $session['id'],
     'livemode' => !empty($session['livemode']),
     'subtotal' => $subtotal,
-    'shipping' => $isPickup ? 0 : (int) $cat['shipping_cents'],
+    'shipping' => $isPickup ? 0 : $shipCents,
     'pickup' => $isPickup,
     'items' => $clean,
     'paid' => false,

@@ -10,11 +10,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="../css/styles.css?v=4">
+<link rel="stylesheet" href="../css/styles.css?v=5">
 <link rel="stylesheet" href="../css/vendor/cropper.min.css">
-<link rel="stylesheet" href="../css/shop.css?v=4">
+<link rel="stylesheet" href="../css/shop.css?v=5">
 </head>
 <body>
+<div class="promo-bar" data-until="2026-12-19T00:00:00-05:00" hidden>Christmas orders: please order by <strong>Friday, December 18</strong>.</div>
 
 <div class="container">
   <header class="nav">
@@ -36,7 +37,7 @@
     <div class="container">
       <h6 class="eyebrow">Shop</h6>
       <h1 class="section-title shop-title">Order photo magnets</h1>
-      <p class="lead">Pick a size and a pack. Add one photo for each magnet and crop it right here. I press every magnet by hand in Cary, NC, and ship it to your door.</p>
+      <p class="lead">Pick a size and a bundle. Add one photo for each magnet and crop it right here. I press every magnet by hand in Cary, NC, and ship it to your door.</p>
     </div>
   </section>
 
@@ -45,7 +46,7 @@
       <div class="products" id="products">
         <p class="text-muted">Loading magnets…</p>
       </div>
-      <p class="text-muted shop-note">Mix and match photos within a pack. Shipping is a flat <span data-shipping>$7</span> per order, or pick up free in Cary. NC sales tax is added at checkout for NC addresses and Cary pickups.</p>
+      <p class="text-muted shop-note">Mix and match photos within a bundle. Shipping is a flat <span data-shipping>$7</span> per order, free on orders of $50 or more, or pick up free in Cary. NC sales tax is added at checkout for NC addresses and Cary pickups.</p>
     </div>
   </section>
 
@@ -55,13 +56,14 @@
       <h2 class="section-title">Cart</h2>
       <div class="cart card" id="cart-box">
         <div id="cart-items"></div>
-        <div class="cart-empty text-muted" id="cart-empty">Your cart is empty. Pick a pack above to get started.</div>
+        <div class="cart-empty text-muted" id="cart-empty">Your cart is empty. Pick a bundle above to get started.</div>
         <div class="cart-summary" id="cart-summary" hidden>
           <div class="cart-row"><span>Magnets</span><span id="cart-subtotal">$0.00</span></div>
           <fieldset class="cart-delivery">
             <legend>How do you want your magnets?</legend>
             <label class="delivery-option"><input type="radio" name="delivery" value="ship" checked> <span>Ship to me</span><span class="delivery-price" data-shipping>$7</span></label>
             <label class="delivery-option"><input type="radio" name="delivery" value="pickup"> <span>Free pickup in Cary, NC</span><span class="delivery-price">Free</span></label>
+            <p class="text-muted cart-tax-note" id="free-ship-note" hidden></p>
             <p class="text-muted cart-tax-note" id="pickup-note" hidden>I'll email you when your magnets are ready to set a pickup time.</p>
           </fieldset>
           <div class="cart-row"><span id="cart-shipping-label">Shipping</span><span id="cart-shipping">$7.00</span></div>
@@ -76,11 +78,11 @@
   </section>
 </main>
 
-<footer class="container footer">
-  &copy; 2026 The Magnet Fairy · Cary, NC · <a href="mailto:scott@themagnetfairy.com">scott@themagnetfairy.com</a>
+<footer class="footer">
+  <p class="container">&copy; 2026 The Magnet Fairy, LLC · Cary, NC · <a href="mailto:scott@themagnetfairy.com">scott@themagnetfairy.com</a></p>
 </footer>
 
-<!-- Pack builder: one photo slot per magnet -->
+<!-- Bundle builder: one photo slot per magnet -->
 <div class="sheet" id="builder" hidden role="dialog" aria-modal="true" aria-labelledby="builder-title">
   <div class="sheet-panel">
     <div class="sheet-head">
@@ -133,6 +135,7 @@
 <input type="file" id="file-input" accept="image/jpeg,image/png" hidden>
 
 <script src="../js/vendor/cropper.min.js"></script>
-<script src="../js/shop.js?v=5"></script>
+<script src="../js/promo.js?v=1"></script>
+<script src="../js/shop.js?v=6"></script>
 </body>
 </html>

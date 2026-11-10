@@ -72,6 +72,21 @@ a {
 }
 
 /* ---------------------------------------------
+   Promo bar
+--------------------------------------------- */
+.promo-bar {
+  background: var(--color-accent-2);
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  padding: 8px var(--space-4);
+}
+
+.promo-bar[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------
    Nav
 --------------------------------------------- */
 .nav {

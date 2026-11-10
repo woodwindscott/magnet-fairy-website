@@ -3,6 +3,8 @@
   "currency": "usd",
   "shipping_cents": 700,
   "shipping_label": "Shipping (flat rate, USPS)",
+  "free_shipping_min_cents": 5000,
+  "free_shipping_label": "Free shipping (orders of $50 or more)",
   "print_dpi": 300,
   "sizes": {
     "rectangle": {

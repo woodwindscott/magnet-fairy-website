@@ -1,10 +1,10 @@
 // The Magnet Fairy — shop
 //
-// Flow: pick a size + pack -> one photo slot per magnet -> customer picks a
+// Flow: pick a size + bundle -> one photo slot per magnet -> customer picks a
 // photo -> the ORIGINAL file uploads straight from the browser to Scott's
 // Dropbox (via a temporary upload link from api/get-upload-link.php) while
 // the customer crops it -> on "Use this crop" a print-ready JPEG of the crop
-// (full resolution, at least 300 dpi) uploads too -> pack goes in the cart (localStorage)
+// (full resolution, at least 300 dpi) uploads too -> bundle goes in the cart (localStorage)
 // -> checkout posts the cart to api/create-checkout.php, which checks prices
 // on the server and redirects to Stripe Checkout.
 //
@@ -83,9 +83,13 @@
     return n;
   }
   function sizeInfo(size) { return catalog.sizes[size]; }
+  function shipFor(sub) {
+    var min = catalog.free_shipping_min_cents || 0;
+    return min && sub >= min ? 0 : catalog.shipping_cents;
+  }
   function packPrice(size, pack) { return sizeInfo(size).packs[String(pack)]; }
   function packName(size, pack) {
-    return sizeInfo(size).name + (pack > 1 ? " — " + pack + "-pack" : "");
+    return sizeInfo(size).name + (pack > 1 ? " — bundle of " + pack : "");
   }
   function paperMm(size, orientation) {
     var p = sizeInfo(size).paper_mm;
@@ -608,9 +612,25 @@
     var sub = cartSubtotal();
     $("cart-subtotal").textContent = money(sub);
     var pickup = cart.delivery === "pickup";
-    var ship = pickup ? 0 : catalog.shipping_cents;
+    var ship = pickup ? 0 : shipFor(sub);
     $("cart-shipping-label").textContent = pickup ? "Pickup in Cary" : "Shipping";
-    $("cart-shipping").textContent = pickup ? "Free" : money(ship);
+    $("cart-shipping").textContent = ship === 0 ? "Free" : money(ship);
+    Array.prototype.forEach.call(document.querySelectorAll(".delivery-option [data-shipping]"), function (n) {
+      n.textContent = shipFor(sub) === 0 ? "Free" : shortMoney(catalog.shipping_cents);
+    });
+    var freeNote = $("free-ship-note");
+    if (freeNote) {
+      var min = catalog.free_shipping_min_cents || 0;
+      if (!min || pickup) {
+        freeNote.hidden = true;
+      } else if (sub >= min) {
+        freeNote.hidden = false;
+        freeNote.textContent = "Your order ships free.";
+      } else {
+        freeNote.hidden = false;
+        freeNote.textContent = "Add " + money(min - sub) + " more for free shipping.";
+      }
+    }
     $("cart-total").textContent = money(sub + ship);
     $("pickup-note").hidden = !pickup;
     Array.prototype.forEach.call(document.querySelectorAll('input[name="delivery"]'), function (r) {
@@ -652,7 +672,7 @@
         btn.textContent = "Check out securely";
         err.hidden = false;
         err.textContent = "Test preview: on the real site this goes to Stripe's secure checkout page for " +
-          money(cartSubtotal() + (cart.delivery === "pickup" ? 0 : catalog.shipping_cents)) + " plus NC tax if it applies.";
+          money(cartSubtotal() + (cart.delivery === "pickup" ? 0 : shipFor(cartSubtotal()))) + " plus NC tax if it applies.";
       }, 600);
       return;
     }
