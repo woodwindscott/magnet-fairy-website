@@ -567,6 +567,32 @@ textarea.input {
 /* ---------------------------------------------
    About
 --------------------------------------------- */
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.about-photo {
+  margin: 0;
+}
+
+.about-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.about-photo figcaption {
+  margin-top: var(--space-2);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .about-body {
   max-width: 680px;
   font-size: 17px;
@@ -662,7 +688,8 @@ textarea.input {
   .cards,
   .steps,
   .sizes,
-  .footer-grid {
+  .footer-grid,
+  .about-grid {
     grid-template-columns: 1fr;
   }
 
