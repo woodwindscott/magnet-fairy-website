@@ -565,6 +565,28 @@ textarea.input {
 }
 
 /* ---------------------------------------------
+   About
+--------------------------------------------- */
+.about-body {
+  max-width: 680px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.about-body p {
+  margin: 0 0 var(--space-4);
+}
+
+.about-sign {
+  font-weight: 600;
+}
+
+.about-sign span {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------
    FAQ
 --------------------------------------------- */
 .faq {
